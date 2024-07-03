@@ -21,7 +21,7 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         var user = userClient.findByEmail(s);
         if(user == null) {
-            logger.error("Email not foud: " + s);
+            logger.error("Email not foud: {}", s);
             throw new UsernameNotFoundException("Email not found.");
         }
         return user;

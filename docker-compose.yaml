@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-  hr-worker-pg12:
+  hr-worker-postgres:
+    container_name: hr-worker-postgres
     image: postgres:12-alpine
     restart: unless-stopped
     ports:
@@ -14,7 +15,8 @@ services:
     volumes:
       - data:/temp
   
-  hr-user-pg12:
+  hr-user-postgres:
+    container_name: hr-user-postgres
     image: postgres:12-alpine
     restart: unless-stopped
     ports:
@@ -28,6 +30,7 @@ services:
       - data:/temp
 
   hr-config-server:
+    container_name: hr-config-server
     build: ./hr-config-server/
     restart: unless-stopped
     ports:
@@ -38,52 +41,84 @@ services:
       - data:/temp
 
   hr-eureka-server:
+    container_name: hr-eureka-server
     build: ./hr-eureka-server/
     restart: unless-stopped
     ports:
       - "8761:8761"
+    depends_on:
+      - hr-config-server
     networks:
       - hr-network
     volumes:
       - data:/temp
 
   hr-api-gateway-zuul:
+    container_name: hr-api-gateway-zuul
     build: ./hr-api-gateway-zuul/
     restart: unless-stopped
     ports:
       - "8765:8765"
+    environment:
+      EUREKA_SERVER: hr-eureka-server
+      CONFIG_SERVER: hr-config-server
+    depends_on:
+      - hr-eureka-server
     networks:
       - hr-network
     volumes:
       - data:/temp
 
   hr-worker:
+    container_name: hr-worker
     build: ./hr-worker/
     restart: unless-stopped
+    environment:
+      EUREKA_SERVER: hr-eureka-server
+      CONFIG_SERVER: hr-config-server
+    depends_on:
+      - hr-eureka-server
     networks:
       - hr-network
     volumes:
       - data:/temp
 
   hr-user:
+    container_name: hr-user
     build: ./hr-user/
     restart: unless-stopped
+    environment:
+      EUREKA_SERVER: hr-eureka-server
+      CONFIG_SERVER: hr-config-server
+    depends_on:
+      - hr-eureka-server
     networks:
       - hr-network
     volumes:
       - data:/temp
 
   hr-payroll:
+    container_name: hr-payroll
     build: ./hr-payroll/
     restart: unless-stopped
+    environment:
+      EUREKA_SERVER: hr-eureka-server
+    depends_on:
+      - hr-eureka-server
     networks:
       - hr-network
     volumes:
       - data:/temp
 
   hr-oauth:
+    container_name: hr-oauth
     build: ./hr-oauth/
     restart: unless-stopped
+    environment:
+      EUREKA_SERVER: hr-eureka-server
+      CONFIG_SERVER: hr-config-server
+    depends_on:
+      - hr-eureka-server
     networks:
       - hr-network
     volumes:
